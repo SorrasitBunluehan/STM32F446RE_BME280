@@ -1,0 +1,2 @@
+main.cpp:22:6:void delay()	16	static
+main.cpp:27:5:int main()	4	static
