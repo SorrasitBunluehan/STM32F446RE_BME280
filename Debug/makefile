@@ -42,34 +42,34 @@ endif
 
 -include ../makefile.defs
 
-BUILD_ARTIFACT_NAME := STM32F446RE_CPP
+BUILD_ARTIFACT_NAME := STM32F446RE_BME280
 BUILD_ARTIFACT_EXTENSION := elf
 BUILD_ARTIFACT_PREFIX := 
 BUILD_ARTIFACT := $(BUILD_ARTIFACT_PREFIX)$(BUILD_ARTIFACT_NAME).$(BUILD_ARTIFACT_EXTENSION)
 
 # Add inputs and outputs from these tool invocations to the build variables 
 EXECUTABLES += \
-STM32F446RE_CPP.elf \
+STM32F446RE_BME280.elf \
 
 SIZE_OUTPUT += \
 default.size.stdout \
 
 OBJDUMP_LIST += \
-STM32F446RE_CPP.list \
+STM32F446RE_BME280.list \
 
 OBJCOPY_BIN += \
-STM32F446RE_CPP.bin \
+STM32F446RE_BME280.bin \
 
 
 # All Target
 all: main-build
 
 # Main-build Target
-main-build: STM32F446RE_CPP.elf secondary-outputs
+main-build: STM32F446RE_BME280.elf secondary-outputs
 
 # Tool invocations
-STM32F446RE_CPP.elf: $(OBJS) $(USER_OBJS) D:\Self-Study\MyProj\STM32F446RE\STM32F446RE_CPP\STM32F446RETX_FLASH.ld
-	arm-none-eabi-g++ -o "STM32F446RE_CPP.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"D:\Self-Study\MyProj\STM32F446RE\STM32F446RE_CPP\STM32F446RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="STM32F446RE_CPP.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -lstdc++ -lsupc++ -Wl,--end-group
+STM32F446RE_BME280.elf: $(OBJS) $(USER_OBJS) D:\Self-Study\MyProj\STM32F446RE\STM32F446RE_BME280\STM32F446RETX_FLASH.ld
+	arm-none-eabi-g++ -o "STM32F446RE_BME280.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"D:\Self-Study\MyProj\STM32F446RE\STM32F446RE_BME280\STM32F446RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="STM32F446RE_BME280.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -lstdc++ -lsupc++ -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
@@ -78,13 +78,13 @@ default.size.stdout: $(EXECUTABLES)
 	@echo 'Finished building: $@'
 	@echo ' '
 
-STM32F446RE_CPP.list: $(EXECUTABLES)
-	arm-none-eabi-objdump -h -S $(EXECUTABLES) > "STM32F446RE_CPP.list"
+STM32F446RE_BME280.list: $(EXECUTABLES)
+	arm-none-eabi-objdump -h -S $(EXECUTABLES) > "STM32F446RE_BME280.list"
 	@echo 'Finished building: $@'
 	@echo ' '
 
-STM32F446RE_CPP.bin: $(EXECUTABLES)
-	arm-none-eabi-objcopy  -O binary $(EXECUTABLES) "STM32F446RE_CPP.bin"
+STM32F446RE_BME280.bin: $(EXECUTABLES)
+	arm-none-eabi-objcopy  -O binary $(EXECUTABLES) "STM32F446RE_BME280.bin"
 	@echo 'Finished building: $@'
 	@echo ' '
 
