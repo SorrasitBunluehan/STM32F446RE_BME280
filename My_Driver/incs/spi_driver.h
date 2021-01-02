@@ -84,6 +84,7 @@ class HSPI{
 		uint8_t 			*pRxBuffer;
 		uint32_t 			TxLen;
 		uint32_t 			RxLen;
+		uint8_t get_status(uint8_t pos);
 	public:
 		HSPI(SPI_RegDef_t *_spix);
 		void SetCfg(SPI_DEVICE_MODE _devmode, SPI_BUSCFG _buscfg,
@@ -99,64 +100,18 @@ class HSPI{
 
 		void SetSSI(uint8_t EnorDi);
 
-
 		/*
 		 *	Blocking Transmitting API 
 		 */
-		void SPI_SendData(uint8_t *pTxbuf, uint32_t Len);
-		void SPI_ReadData(uint8_t *pRxbuf, uint32_t Len);
+		void SendData(uint8_t *pTxbuf, uint32_t Len);
+		void ReadData(uint8_t *pRxbuf, uint32_t Len);
 
 		/*
 		 *	Non-Blocking Transmitting API 
 		 */
-		void SPI_SendData_it(uint8_t *pTxbuf, uint32_t Len);
-		void SPI_ReadData_it(uint8_t *pRxbuf, uint32_t Len);
+		void SendData_it(uint8_t *pTxbuf, uint32_t Len);
+		void ReadData_it(uint8_t *pRxbuf, uint32_t Len);
 
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 #endif

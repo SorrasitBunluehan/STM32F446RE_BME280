@@ -152,6 +152,70 @@ void HSPI::Init(void)
 }
 
 /*********************************************************************
+ * @fn      	      - DeInit
+ *
+ * @brief             - Enable CLK Peripheral and  setup all Handle 
+ * 						Config into SPIx Reg
+ *
+ * @param[in]         -
+ *
+ * @return            -  none
+ *
+ * @Note              -  
+ *
+ */
+/********************************************************************/
+void HSPI::DeInit(void)
+{
+  if(this->SPIx = SPI1){
+    SPI1_RST();
+  }else if(this->SPIx = SPI2){
+    SPI2_RST();
+  }else if(this->SPIx = SPI3){
+    SPI3_RST();
+  }else if(this->SPIx = SPI4){
+    SPI4_RST();
+  }
+}
+
+
+/*********************************************************************
+ * @fn      	      - Enable
+ *
+ * @brief             - Enable SPI Peripheral in Register Structure
+ *
+ * @param[in]         -
+ *
+ * @return            -  none
+ *
+ * @Note              - This API need to be called after finished all setup from INIT  
+ *
+ */
+/********************************************************************/
+void HSPI::Enable(void)
+{
+  this->SPIx->CR1 |= (1 << SPI_CR1_SPE)
+}
+
+/*********************************************************************
+ * @fn      	      - Disable
+ *
+ * @brief             - Disable SPI Peripheral in Register Structure
+ *
+ * @param[in]         -
+ *
+ * @return            -  none
+ *
+ * @Note              - 
+ *
+ */
+/********************************************************************/
+void HSPI::Disable(void)
+{
+  this->SPIx->CR1 &= ~(1 << SPI_CR1_SPE)
+}
+
+/*********************************************************************
  * @fn      		  - EnableInterruptMode
  *
  * @brief             - Enable TXEIE ,RXNEIE, and ERRIE in RegDefStructure
@@ -209,3 +273,94 @@ void HSPI::SetSSI(uint8_t EnorDi)
 		this->SPIx->CR1 &= ~(1 << SPI_CR1_SSI);
 	}
 }
+
+/*********************************************************************
+ * @fn      	      - SPI_SendData
+ *
+ * @brief             - Send data to SPI Slave with blocking API
+ *
+ * @param[in]         - [1] Pointer to Txbuffer
+ * 			[2] Length in Byte to transfer
+ *
+ * @return            -  none
+ *
+ * @Note              -  
+ */
+/********************************************************************/
+void HSPI::SendData(uint8_t *pTxbuf, uint32_t Len)
+{
+  
+  // Loop for Len
+  while(Len > 0){
+
+    // Wait for TXE bit in CR Reg
+    while(!get_status(SPI_SR_TXE));
+      
+    // Check DFF 
+    if (this->Dff == SPI_DFF_8){
+	  this->SPIx->DR = *pTxbuf;
+	  pTxbuf++;
+	  Len--;
+    }else{
+	  this->SPIx->DR = *(uint16_t*)pTxbuf;
+	  (uint16_t*)pTxbuf++;
+	  Len--;
+	  Len--;
+    }
+  }
+}
+
+/*********************************************************************
+ * @fn      	      - SPI_ReadData
+ *
+ * @brief             - Read data to SPI Slave with blocking API
+ *
+ * @param[in]         - [1] Pointer to Rxbuffer
+ * 			[2] Length in Byte to Received
+ *
+ * @return            -  none
+ *
+ * @Note              - User Application will might get stuck in this API 
+ * 			if it doesn't get enough data as state in Len param.
+ */
+/********************************************************************/
+void HSPI::ReadData(uint8_t *pRxbuf, uint32_t Len)
+{
+  
+  // Loop for Len
+  while(Len > 0){
+
+    // Wait for TXE bit in CR Reg
+    while(!get_status(SPI_SR_RXNE));
+      
+    // Check DFF 
+    if (this->Dff == SPI_DFF_8){
+	  *pRxbuf = this->SPIx->DR;
+	  pRxbuf++;
+	  Len--;
+    }else{
+	  *(uint16_t*)pRxbuf = this->SPIx->DR;
+	  (uint16_t*)pRxbuf++;
+	  Len--;
+	  Len--;
+    }
+  }
+}
+/*********************************************************************
+ * @fn      	      - get_status
+ *
+ * @brief             - Get Status from Status Register
+ *
+ * @param[in]         - [1] Mask Position bit of wanted status
+ *
+ * @return            - Status bit
+ *
+ * @Note              -  
+ */
+/********************************************************************/
+uint8_t HSPI::get_status(uint8_t pos)
+{
+  return (uint8_t)((this->SPIx->SR >> pos) && 0x0001U);
+}
+
+
