@@ -68,78 +68,66 @@ typedef enum
 	SPI_CPHA_SECOND_CAP
 }SPI_CPHA_CFG;
 
+typedef enum
+{
+    SPI_READY = 0,
+    SPI_BUSY_TX, 
+    SPI_BUSY_RX
+}SPI_HANDLE_STATE;
 
 class HSPI{
 	private:
 		SPI_RegDef_t 		*SPIx;
 		SPI_DEVICE_MODE		DevMode;
-		SPI_BUSCFG			BusCfg;
-		SPI_DFF				Dff;
+		SPI_BUSCFG		BusCfg;
+		SPI_DFF		        Dff;
 		SPI_SLV_MNG_MODE	SlvMngMode;
 		SPI_BAUD_RATE_DIV	BaudDiv;
 		SPI_CPOL_CFG		Cpol;
 		SPI_CPHA_CFG 		Cpha;
-		uint8_t 			*pTxBuffer;
-		uint8_t 			*pRxBuffer;
-		uint32_t 			TxLen;
-		uint32_t 			RxLen;
-	public:
-		HSPI(SPI_RegDef_t *_spix);
-		void SetCfg(SPI_DEVICE_MODE _devmode, SPI_BUSCFG _buscfg,
-			   SPI_DFF _dff, SPI_SLV_MNG_MODE _slvmgnmode,
-			   SPI_BAUD_RATE_DIV _bauddiv,SPI_CPOL_CFG _cpol,
-			   SPI_CPHA_CFG _cpha);
-		void Init(void);
-		void DeInit(void);
-		void Enable(void);
-		void Disable(void);
-		void EnableInterruptMode(void);
-		void DisableInterruptMode(void);
+		uint8_t 		*pTxBuffer;
+		uint8_t 	        *pRxBuffer;
+		uint32_t 		TxLen;
+		uint32_t 		RxLen;
+                SPI_HANDLE_STATE        rx_state;
+                SPI_HANDLE_STATE        tx_state;
 
-		void SetSSI(uint8_t EnorDi);
+                /*
+                 *  SPI Interrupt Helper Function
+                 */
+                void Spi_TX_Interrupt_Helper (void);
+                void Spi_RX_Interrupt_Helper (void);
+                void Spi_OVR_Interrupt_Helper (void);
+
+        public:
+                HSPI(SPI_RegDef_t *_spix);
+                void SetCfg(SPI_DEVICE_MODE _devmode, SPI_BUSCFG _buscfg,
+                        SPI_DFF _dff, SPI_SLV_MNG_MODE _slvmgnmode,
+                        SPI_BAUD_RATE_DIV _bauddiv,SPI_CPOL_CFG _cpol,
+                        SPI_CPHA_CFG _cpha);
+                void Init(void);
+                void DeInit(void);
+                void Enable(void);
+                void Disable(void);
+                //void EnableInterruptMode(void);
+                //void DisableInterruptMode(void);
+
+                void SetSSI(uint8_t EnorDi);
 
 
-		/*
-		 *	Blocking Transmitting API 
-		 */
-		void SPI_SendData(uint8_t *pTxbuf, uint32_t Len);
-		void SPI_ReadData(uint8_t *pRxbuf, uint32_t Len);
+                /*
+                 *	Blocking Transmitting API 
+                 */
+                void SPI_SendData(uint8_t *pTxbuf, uint32_t Len);
+                void SPI_ReadData(uint8_t *pRxbuf, uint32_t Len);
 
-		/*
-		 *	Non-Blocking Transmitting API 
-		 */
-		void SPI_SendData_it(uint8_t *pTxbuf, uint32_t Len);
-		void SPI_ReadData_it(uint8_t *pRxbuf, uint32_t Len);
-
+                /*
+                 *	Non-Blocking Transmitting API 
+                 */
+                uint8_t SPI_SendData_it(uint8_t *pTxbuf, uint32_t Len);
+                uint8_t SPI_ReadData_it(uint8_t *pRxbuf, uint32_t Len);
+                void SPI_IRQHandling();
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
