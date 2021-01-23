@@ -17,6 +17,8 @@
 HSPI::HSPI(SPI_RegDef_t *_spix)
 {
 	this->SPIx = _spix;
+        this->rx_state = SPI_READY;
+        this->tx_state = SPI_READY;
 }
 
 /*********************************************************************
@@ -160,18 +162,19 @@ void HSPI::Init(void)
  *
  * @return            -  none
  *
- * @Note              -  
+ * @Note              -  Not use for now since implement enable TXEIE and RXNEIE 
+ *                      inside SPI_SendData_it and SPI_ReadData_it.
  */
 /********************************************************************/
-void HSPI::EnableInterruptMode(void)
-{
-	this->SPIx->CR2 |= (1 << SPI_CR2_TXEIE); 
-	this->SPIx->CR2 |= (1 << SPI_CR2_RXNEIE); 
-	this->SPIx->CR2 |= (1 << SPI_CR2_ERRIE); 
-}
+//void HSPI::EnableInterruptMode(void)
+//{
+//	this->SPIx->CR2 |= (1 << SPI_CR2_TXEIE); 
+//	this->SPIx->CR2 |= (1 << SPI_CR2_RXNEIE); 
+//	this->SPIx->CR2 |= (1 << SPI_CR2_ERRIE); 
+//}
 
 /*********************************************************************
- * @fn      		  - DisableInterruptMode
+ * @fn      	      - DisableInterruptMode
  *
  * @brief             - Disable TXEIE ,RXNEIE, and ERRIE in RegDefStructure
  *
@@ -179,15 +182,16 @@ void HSPI::EnableInterruptMode(void)
  *
  * @return            -  none
  *
- * @Note              -  
+ * @Note              - Not use for now since implement enable TXEIE and RXNEIE 
+ *                      inside SPI_SendData_it and SPI_ReadData_it.
  */
 /********************************************************************/
-void HSPI::DisableInterruptMode(void)
-{
-	this->SPIx->CR2 &= ~(1 << SPI_CR2_TXEIE); 
-	this->SPIx->CR2 &= ~(1 << SPI_CR2_RXNEIE); 
-	this->SPIx->CR2 &= ~(1 << SPI_CR2_ERRIE); 
-}
+//void HSPI::DisableInterruptMode(void)
+//{
+//	this->SPIx->CR2 &= ~(1 << SPI_CR2_TXEIE); 
+//	this->SPIx->CR2 &= ~(1 << SPI_CR2_RXNEIE); 
+//	this->SPIx->CR2 &= ~(1 << SPI_CR2_ERRIE); 
+//}
 
 /*********************************************************************
  * @fn      		  - SetSSI
@@ -209,3 +213,112 @@ void HSPI::SetSSI(uint8_t EnorDi)
 		this->SPIx->CR1 &= ~(1 << SPI_CR1_SSI);
 	}
 }
+
+/*********************************************************************
+ * @fn      	      - SPI_SendData_it
+ *
+ * @brief             - Transmitted data with interrupt mode. This API does
+ *                      not do any tramission but only set up config Tx buffer,
+ *                      Transmission Length, and set the status of the handle.
+ *                      The transmission will be take place in Txeie IRQ Handler. 
+ *
+ * @param[in]         - [1] Tx bufer
+ *                      [2] Transmitted Length
+ *
+ * @return            - SUCCESS for success setup all parameter 
+ *                      FAILURE for when SPI handle is busy in other mode
+ *
+ * @Note              -  
+ */
+/********************************************************************/
+uint8_t HSPI::SPI_SendData_it(uint8_t *pTxbuf, uint32_t Len)
+{
+    if (this->tx_state != SPI_BUSY_TX){
+        this->pTxBuffer = pTxbuf;
+        this->TxLen = Len;
+        this->tx_state = SPI_BUSY_TX;
+        this->SPIx->CR2 |= (1 << SPI_CR2_TXEIE);
+        return SUCCESS;
+    }else {
+        return FAILURE;
+    }
+}
+
+/*********************************************************************
+ * @fn      	      - SPI_ReadData_it 
+ *
+ * @brief             - Received data with interrupt mode. This API does
+ *                      not do any Receiving but only set up config Rx buffer,
+ *                      Receiving Length, and set the status of the handle.
+ *                      The transmission will be take place in Rxeie IRQ Handler. 
+ *
+ * @param[in]         - [1] Rx bufer
+ *                      [2] Receiving Length
+ *
+ * @return            - SUCCESS for success setup all parameter 
+ *                      FAILURE for when SPI handle is busy in other mode
+ *
+ * @Note              -  
+ */
+/********************************************************************/
+uint8_t HSPI::SPI_ReadData_it(uint8_t *pRxbuf, uint32_t Len)
+{
+    if (this->rx_state != SPI_BUSY_RX){
+        this->pRxBuffer = pRxbuf;
+        this->RxLen = Len;
+        this->rx_state = SPI_BUSY_RX;
+        this->SPIx->CR2 |= (1 << SPI_CR2_RXNEIE);
+        return SUCCESS;
+    }else {
+        return FAILURE;
+    }
+}
+
+
+/*********************************************************************
+ * @fn      	      - SPI_IRQHandling 
+ *
+ * @brief             - This API check source of an interrupt and call 
+ *                      spicific api accordingly.
+ *                      API Called Choices:
+ *                          [1] Spi_TX_Interrupt_Helper
+ *                          [2] Spi_RX_Interrupt_Helper
+ *                          [2] Spi_OVR_Interrupt_Helper
+ *
+ * @param[in]         - 
+ *
+ * @return            - none 
+ *                    
+ * @Note              - This function need to be call from ISR.   
+ */
+/********************************************************************/
+void HSPI::SPI_IRQHandling()
+{
+    uint8_t temp1,temp2;
+    // 1. Check for Interrupt from TXIE
+    temp1 = (this->SPIx->CR2 & (1 << SPI_CR2_TXEIE));
+    temp2 = (this->SPIx->SR & (1 << SPI_SR_TXE));	
+
+    if (temp1 && temp2){
+        Spi_TX_Interrupt_Helper();
+    }
+
+    // 2. Check for Interrupt from RXNEIE
+    temp1 = (this->SPIx->CR2 & (1 << SPI_CR2_RXNEIE)); 
+    temp2 = (this->SPIx->SR & (1 << SPI_SR_RXNE));	
+
+    if (temp1 && temp2){
+        Spi_RX_Interrupt_Helper();        
+    }
+
+    // 3. Check for Interrupt from OVR  
+    temp1 = (this->SPIx->CR2 & (1 << SPI_CR2_ERRIE)); 
+    temp2 = (this->SPIx->SR & (1 << SPI_SR_OVR));	
+
+    if (temp1 && temp2){
+        Spi_OVR_Interrupt_Helper();
+    }
+}
+
+
+
